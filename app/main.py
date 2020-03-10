@@ -1,4 +1,4 @@
-from guizero import App, Window, MenuBar
+from guizero import App, Window, MenuBar, ListBox
 import guizero
 import requests
 from PIL import Image
@@ -14,6 +14,7 @@ selected_quality = None
 video_link = None
 video_box = None
 push_btn = None
+try_again = None
 loading_text = None
 display_width = 500
 
@@ -49,7 +50,7 @@ def main():
 	global push_btn
 	push_btn = guizero.PushButton(app, text="Search Video", command=start_download_thread)
 	global video_box
-	video_box = guizero.Box(app, width="fill", height="fill")
+	video_box = guizero.Box(app, width=int(display_width-100), height=100)
 
 
 def get_link_val():
@@ -64,7 +65,7 @@ def get_video():
 		img = Image.open(BytesIO(thumbnail_response.content))
 		quality = video.streams.filter(progressive=True)
 		global selected_quality
-		selected_quality = quality[-1]
+		selected_quality = [items.resolution for items in quality]
 	except pytube.exceptions.RegexMatchError:
 		#global video_box
 		video_box.width = "fill"
@@ -75,11 +76,17 @@ def get_video():
 		guizero.Text(video_box, text=" ")
 		txt = guizero.Text(video_box, text="Please check your internet connection and try again")
 		guizero.Text(video_box, text=" ")
-		guizero.PushButton(app, text="Try again", command=start_download_thread)
+		global try_again
+		try_again = guizero.PushButton(app, text="Try again", command=start_download_thread)
 		guizero.Text(app, text=" ")
 	else:
 		#global video_box
-		thumbnail = guizero.Picture(video_box, image=img, align="left", width=100, height=100)
+		picture_box = guizero.Box(video_box, align="left", width=100, height="fill")
+		info_box = guizero.Box(video_box, align="right", width=display_width-100, height="fill")
+		thumbnail = guizero.Picture(picture_box, image=img, align="left", width=100, height=100)
+		title = guizero.Text(info_box, text=title, width="fill")
+		title = guizero.Text(info_box, text=" ", width="fill")
+		qualities = guizero.ListBox(info_box, items=quality, width="fill", height=100)
 	loading_text.destroy()
 
 def start_download_thread():
@@ -90,7 +97,11 @@ def start_download_thread():
 	loading_text = guizero.Text(app, text="Loading...")
 	if not download_thread.isAlive():
 		print("DONE")
-
+	try:
+		try_again.destroy()
+		loading_text = guizero.Text(app, text="Loading...")
+	except:
+		pass
 
 def download_video(stream, destination, title):
 	stream.download(os.path.join(destination, title))
