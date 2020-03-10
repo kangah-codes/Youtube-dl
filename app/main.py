@@ -16,6 +16,7 @@ video_box = None
 push_btn = None
 try_again = None
 loading_text = None
+qualities = '360p'
 display_width = 500
 
 app = App(title="Youtube-dl", width=display_width, height=600)
@@ -85,8 +86,10 @@ def get_video():
 		info_box = guizero.Box(video_box, align="right", width=display_width-100, height="fill")
 		thumbnail = guizero.Picture(picture_box, image=img, align="left", width=100, height=100)
 		title = guizero.Text(info_box, text=title, width="fill")
-		title = guizero.Text(info_box, text=" ", width="fill")
-		qualities = guizero.ListBox(info_box, items=quality, width="fill", height=100)
+		download_box = guizero.Box(info_box, width=75, height=50)
+		global qualities
+		download_btn = guizero.PushButton(download_box, text="Download", command=download_video, args=[quality[selected_quality.index(qualities.value)], os.getcwd(), title])
+		qualities = guizero.ListBox(info_box, items=[item.resolution for item in quality], width=100, height=100)
 	loading_text.destroy()
 
 def start_download_thread():
@@ -104,7 +107,7 @@ def start_download_thread():
 		pass
 
 def download_video(stream, destination, title):
-	stream.download(os.path.join(destination, title))
+	stream.download(os.path.join(destination, f"{title}.mp4"))
 
 
 
